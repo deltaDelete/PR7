@@ -26,10 +26,16 @@ erDiagram
     Doctor {
         int Id PK
         string Name
-        string Specialty
+        int SpecialtyId FK
         string Phone
         string Email
     }
+
+    Speciality {
+        int SpecialityId PK
+        string SpecialityName
+    }
+
     Medication {
         int MedicationId PK
         int DrugId FK
@@ -59,12 +65,14 @@ erDiagram
 
     Patient       ||--|{ Appointment : "есть"
     Doctor        ||--|{ Appointment : "проводит"
+    Speciality    ||--|{ Doctor      : "имеет"
     Patient       ||--|{ Medication  : "принимает"
     Patient       ||--|{ Diagnosis   : "получает"
     Doctor        ||--|{ Diagnosis   : "делает"
     DiagnosisType ||--|{ Diagnosis   : "имеет"
     Drug          ||--|{ Medication  : "какой препарат"
 ```
+[Диаграмма в другой утилите](https://dbdiagram.io/d/PR7-65375bc7ffbf5169f050827c)
 ## Блок-схемы
 ###  Расчет количества назначенных препаратов
 > [!NOTE]
