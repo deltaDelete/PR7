@@ -6,8 +6,6 @@
 
 ## ER-диаграмма
 
-<!-- TODO Упорядочить таблицы -->
-
 ```mermaid
 erDiagram
     Patient {
