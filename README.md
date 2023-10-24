@@ -21,6 +21,7 @@ erDiagram
         int DoctorId FK
         datetime AppointmentDate
         string AppointmentType
+        string Comment
     }
     Doctor {
         int Id PK
@@ -48,6 +49,7 @@ erDiagram
         int DoctorId FK
         datetime DiagnosisDate
         int DiagnosisType FK
+        string Comment
     }
 
     DiagnosisType {
