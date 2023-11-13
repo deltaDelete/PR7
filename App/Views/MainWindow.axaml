@@ -4,6 +4,8 @@
                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                            xmlns:rxui="http://reactiveui.net"
+                           xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                           xmlns:views="clr-namespace:App.Views"
                            mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                            x:Class="App.Views.MainWindow"
                            x:DataType="vm:MainWindowViewModel"
@@ -15,9 +17,15 @@
     </Design.DataContext>
 
     <DockPanel LastChildFill="True">
-        <TreeDataGrid Source="{Binding Database.Appointments}">
-        </TreeDataGrid>
-        <DataGrid ItemsSource="{Binding Database.Patients}"/>
+        <controls:NavigationView Name="NavView" 
+                                 IsSettingsVisible="False"
+                                 PaneDisplayMode="Top"
+                                 SelectionChanged="NavView_OnSelectionChanged">
+            <controls:NavigationView.MenuItems>
+                <MenuItem Header="Пациенты" Tag="{x:Type views:PatientView}" IsSelected="True"/>
+            </controls:NavigationView.MenuItems>
+            <controls:Frame Name="NavFrame" />
+        </controls:NavigationView>
     </DockPanel>
     
 </rxui:ReactiveWindow>

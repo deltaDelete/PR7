@@ -5,6 +5,7 @@
       <map>
         <entry key="App/App.axaml" value="App/App.csproj" />
         <entry key="App/Views/MainWindow.axaml" value="App/App.csproj" />
+        <entry key="App/Views/PatientView.axaml" value="App/App.csproj" />
       </map>
     </option>
   </component>

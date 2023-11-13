@@ -11,7 +11,6 @@ using ReactiveUI;
 namespace App.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase {
-    public ApplicationDbContext Database { get; private set; }
 
     public MainWindowViewModel() {
         // TODO: Адаптировать код из прошлых работ
