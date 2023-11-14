@@ -1,31 +1,36 @@
 <rxui:ReactiveWindow x:TypeArguments="vm:MainWindowViewModel" xmlns="https://github.com/avaloniaui"
-                           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                           xmlns:vm="using:App.ViewModels"
-                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                           xmlns:rxui="http://reactiveui.net"
-                           xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-                           xmlns:views="clr-namespace:App.Views"
-                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                           x:Class="App.Views.MainWindow"
-                           x:DataType="vm:MainWindowViewModel"
-                           Icon="/Assets/avalonia-logo.ico"
-                           Title="App">
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:vm="using:App.ViewModels"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:rxui="http://reactiveui.net"
+                     xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                     xmlns:views="clr-namespace:App.Views"
+                     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                     x:Class="App.Views.MainWindow"
+                     x:DataType="vm:MainWindowViewModel"
+                     Icon="/Assets/avalonia-logo.ico"
+                     Title="App">
 
     <Design.DataContext>
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
     <DockPanel LastChildFill="True">
-        <controls:NavigationView Name="NavView" 
+        <controls:NavigationView Name="NavView"
                                  IsSettingsVisible="False"
                                  PaneDisplayMode="Top"
                                  SelectionChanged="NavView_OnSelectionChanged">
             <controls:NavigationView.MenuItems>
-                <MenuItem Header="Пациенты" Tag="{x:Type views:PatientView}" IsSelected="True"/>
+                <MenuItem Header="Пациенты" Tag="{x:Type views:PatientView}" IsSelected="True" />
+                <MenuItem Header="Врачи" Tag="{x:Type views:DoctorView}" />
+                <MenuItem Header="Препараты" Tag="{x:Type views:DrugView}" />
             </controls:NavigationView.MenuItems>
-            <controls:Frame Name="NavFrame" />
+            <Grid>
+                <controls:Frame Name="NavFrame" />
+                <SplitButton />
+            </Grid>
         </controls:NavigationView>
     </DockPanel>
-    
+
 </rxui:ReactiveWindow>

@@ -4,8 +4,11 @@
     <option name="projectPerEditor">
       <map>
         <entry key="App/App.axaml" value="App/App.csproj" />
+        <entry key="App/Views/DoctorView.axaml" value="App/App.csproj" />
+        <entry key="App/Views/DrugView.axaml" value="App/App.csproj" />
         <entry key="App/Views/MainWindow.axaml" value="App/App.csproj" />
         <entry key="App/Views/PatientView.axaml" value="App/App.csproj" />
+        <entry key="App/Views/Препараты.axaml" value="App/App.csproj" />
       </map>
     </option>
   </component>
