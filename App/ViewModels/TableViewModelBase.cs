@@ -5,14 +5,16 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Threading;
 using DynamicData;
 using ReactiveUI;
 
 namespace App.ViewModels;
 
-public class TableViewModelBase<T> : TableViewModelBase {
+public class TableViewModelBase<T> : TableViewModelBase, IActivatableViewModel {
     protected List<T> _itemsFull = null!;
     private readonly ObservableAsPropertyHelper<int> _totalPages;
+    private readonly ObservableAsPropertyHelper<List<List<T>>> _pages;
 
     private readonly Func<List<T>> _databaseGetter;
 
@@ -59,10 +61,12 @@ public class TableViewModelBase<T> : TableViewModelBase {
         get => _selectedRow;
         set => this.RaiseAndSetIfChanged(ref _selectedRow, value);
     }
-    
+
     public new int TotalPages {
         get => _totalPages.Value;
     }
+
+    public List<List<T>> Pages => _pages.Value;
 
     #endregion
 
@@ -82,14 +86,17 @@ public class TableViewModelBase<T> : TableViewModelBase {
         _newItem = newItem;
         _removeItem = removeItem;
 
-        // TODO: решить траблы
-        _totalPages = this.WhenAnyValue(x => Filtered.Count)
+        // TODO: решить траблы переделать способ пагинации
+        _pages = this.WhenAnyValue(x => x.Filtered)
             .Select(x => {
-                var val = (int)Math.Ceiling(x / (double)Take);
-                if (val <= 0) val = 1;
-                return val;
-            }).ToProperty(this, x => x.TotalPages);
-        
+                return x.Select((item, index) => new { Index = index, Item = item })
+                    .GroupBy(item => item.Index / Take)
+                    .Select(grouping => grouping.Select(v => v.Item).ToList())
+                    .ToList();
+            }).ToProperty(this, x => x.Pages);
+        _totalPages = this.WhenAnyValue(x => x.Pages)
+            .Select(x => x.Count).ToProperty(this, x => x.TotalPages);
+
         var canTakeNext = this.WhenAnyValue(
             x => x.CurrentPage,
             selector: it => it < TotalPages);
@@ -119,10 +126,9 @@ public class TableViewModelBase<T> : TableViewModelBase {
         EditItemCommand = ReactiveCommand.Create(() => _editItem(SelectedRow)); //, canEdit);
         RemoveItemCommand = ReactiveCommand.Create(() => _removeItem(SelectedRow)); // , canEdit);
         NewItemCommand = ReactiveCommand.CreateFromTask(_newItem); //, canInsert);
-        ReloadCommand = ReactiveCommand.Create(GetDataFromDb);
+        ReloadCommand = ReactiveCommand.Create(GetDataFromDbOnThread);
 
-        GetDataFromDb();
-
+        GetDataFromDbOnThread();
         this.WhenAnyValue(
                 x => x.SearchQuery,
                 x => x.SelectedSearchColumn,
@@ -153,20 +159,24 @@ public class TableViewModelBase<T> : TableViewModelBase {
         };
     }
 
-    private async void GetDataFromDb() {
-        await Task.Run(async () => {
-            IsLoading = true;
-            if (_databaseGetter is null) {
-                throw new NullReferenceException();
-            }
+    private async void GetDataFromDbOnThread() {
+        await Task.Run(GetDataFromDb);
+    }
 
-            var list = _databaseGetter.Invoke();
+    private async Task GetDataFromDb() {
+        IsLoading = true;
+        if (_databaseGetter is null) {
+            throw new NullReferenceException();
+        }
+
+        var list = _databaseGetter.Invoke();
+        Dispatcher.UIThread.Post(() => {
             _itemsFull = list ?? new List<T>();
             Filtered = _itemsFull;
-            IsLoading = false;
-            SearchQuery = string.Empty;
-            return Task.CompletedTask;
-        });
+        }, DispatcherPriority.Input);
+        SearchQuery = string.Empty;
+        IsLoading = false;
+        await Task.CompletedTask;
     }
 
     public void RemoveLocal(T arg) {
@@ -199,10 +209,9 @@ public class TableViewModelBase<T> : TableViewModelBase {
     }
 
     protected void TakeNext() {
-        Skip += Take;
-        Items = new(
-            Filtered.Skip(Skip).Take(Take).ToList()
-        );
+        if (CurrentPage + 1 > TotalPages) return;
+        Items = new(Pages[CurrentPage - 1]);
+        CurrentPage++;
     }
 
     protected void TakePrev() {
@@ -225,6 +234,8 @@ public class TableViewModelBase<T> : TableViewModelBase {
             Filtered.TakeLast(Take).ToList()
         );
     }
+
+    public ViewModelActivator Activator { get; } = new ViewModelActivator();
 }
 
 public abstract class TableViewModelBase : ViewModelBase {
