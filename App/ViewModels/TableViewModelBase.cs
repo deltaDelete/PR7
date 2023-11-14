@@ -12,6 +12,7 @@ namespace App.ViewModels;
 
 public class TableViewModelBase<T> : TableViewModelBase {
     protected List<T> _itemsFull = null!;
+    private readonly ObservableAsPropertyHelper<int> _totalPages;
 
     private readonly Func<List<T>> _databaseGetter;
 
@@ -58,6 +59,10 @@ public class TableViewModelBase<T> : TableViewModelBase {
         get => _selectedRow;
         set => this.RaiseAndSetIfChanged(ref _selectedRow, value);
     }
+    
+    public new int TotalPages {
+        get => _totalPages.Value;
+    }
 
     #endregion
 
@@ -77,6 +82,14 @@ public class TableViewModelBase<T> : TableViewModelBase {
         _newItem = newItem;
         _removeItem = removeItem;
 
+        // TODO: решить траблы
+        _totalPages = this.WhenAnyValue(x => Filtered.Count)
+            .Select(x => {
+                var val = (int)Math.Ceiling(x / (double)Take);
+                if (val <= 0) val = 1;
+                return val;
+            }).ToProperty(this, x => x.TotalPages);
+        
         var canTakeNext = this.WhenAnyValue(
             x => x.CurrentPage,
             selector: it => it < TotalPages);
