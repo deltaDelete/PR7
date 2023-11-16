@@ -27,6 +27,7 @@
                 <controls:NavigationViewItem Content="Специальности" Tag="{x:Type views:SpecialityView}" />
                 <controls:NavigationViewItem Content="Препараты" Tag="{x:Type views:DrugView}" />
                 <controls:NavigationViewItem Content="Типы диагнозов" Tag="{x:Type views:DiagnosisTypeView}" />
+                <controls:NavigationViewItem Content="Прием лекарств" Tag="{x:Type views:MedicationView}" />
             </controls:NavigationView.MenuItems>
             <Grid>
                 <controls:Frame Name="NavFrame" />

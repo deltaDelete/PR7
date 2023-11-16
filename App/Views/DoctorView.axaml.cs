@@ -11,6 +11,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Avalonia.VisualTree;
@@ -81,8 +82,10 @@ public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>
                     PlaceholderText = "Специальность",
                     ItemsSource = db.Specialities.ToList(),
                     [!ComboBox.SelectedItemProperty] = new Binding("Speciality"),
+                    [!ComboBox.SelectedValueProperty] = new Binding("Speciality.Id"),
                     DisplayMemberBinding = new Binding("Name"),
                     SelectedValueBinding = new Binding("Id"),
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
                 }
             }
         };
@@ -136,7 +139,8 @@ public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>
                     [!ComboBox.SelectedItemProperty] = new Binding("Speciality"),
                     [!ComboBox.SelectedValueProperty] = new Binding("Speciality.Id"),
                     DisplayMemberBinding = new Binding("Name"),
-                    SelectedValueBinding = new Binding("Id")
+                    SelectedValueBinding = new Binding("Id"),
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
                 }
             }
         };
