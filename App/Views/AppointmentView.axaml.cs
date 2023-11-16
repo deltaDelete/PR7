@@ -87,7 +87,6 @@ public partial class AppointmentView : ReactiveUserControl<TableViewModelBase<Ap
     private async void EditItem(Appointment? i) {
         if (i is null) return;
         var stack = GenerateDialogPanel();
-        // TODO Где то здесь NullReferenceException
         var dialog = new ContentDialog() {
             Title = "Изменение записи",
             PrimaryButtonText = "Изменить",
@@ -161,7 +160,7 @@ public partial class AppointmentView : ReactiveUserControl<TableViewModelBase<Ap
                     [!ComboBox.SelectedItemProperty] = new Binding("Doctor"),
                     [!ComboBox.SelectedValueProperty] = new Binding("Doctor.DoctorId"),
                     DisplayMemberBinding = new Binding("Name"),
-                    SelectedValueBinding = new Binding("Id"),
+                    SelectedValueBinding = new Binding("DoctorId"),
                     HorizontalAlignment = HorizontalAlignment.Stretch
                 },
                 new DatePicker() {
