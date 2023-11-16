@@ -31,4 +31,12 @@
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Design" Version="1.1.2" />
     </ItemGroup>
+
+
+    <ItemGroup>
+      <Compile Update="Views\AppointmentView.axaml.cs">
+        <DependentUpon>AppointmentView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>
