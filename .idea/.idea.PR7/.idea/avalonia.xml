@@ -6,6 +6,7 @@
         <entry key="App/App.axaml" value="App/App.csproj" />
         <entry key="App/Views/AppointmentView.axaml" value="App/App.csproj" />
         <entry key="App/Views/DiagnosisTypeView.axaml" value="App/App.csproj" />
+        <entry key="App/Views/DiagnosisView.axaml" value="App/App.csproj" />
         <entry key="App/Views/DoctorView.axaml" value="App/App.csproj" />
         <entry key="App/Views/DrugView.axaml" value="App/App.csproj" />
         <entry key="App/Views/MainWindow.axaml" value="App/App.csproj" />

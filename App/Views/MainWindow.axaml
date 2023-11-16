@@ -29,6 +29,7 @@
                 <controls:NavigationViewItem Content="Типы диагнозов" Tag="{x:Type views:DiagnosisTypeView}" />
                 <controls:NavigationViewItem Content="Прием лекарств" Tag="{x:Type views:MedicationView}" />
                 <controls:NavigationViewItem Content="Записи" Tag="{x:Type views:AppointmentView}" />
+                <controls:NavigationViewItem Content="Диагнозы" Tag="{x:Type views:DiagnosisView}" />
             </controls:NavigationView.MenuItems>
             <Grid>
                 <controls:Frame Name="NavFrame" />
