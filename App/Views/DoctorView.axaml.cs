@@ -1,27 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using App.Models;
 using App.Utils;
 using App.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
+using Avalonia.VisualTree;
+using DynamicData;
+using DynamicData.Binding;
+using FluentAvalonia.Core;
 using FluentAvalonia.UI.Controls;
 using Microsoft.EntityFrameworkCore;
+using ReactiveUI;
 
-namespace App.Views; 
+namespace App.Views;
 
 public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>> {
     public DoctorView() {
         InitializeComponent();
         ViewModel = new(
             () => new ApplicationDbContext().Doctors
-                .Include(x => x.Speciality)
-                .ToList(),
+                                            .Include(x => x.Speciality)
+                                            .ToList(),
             OrderSelectors,
             DefaultOrderSelector,
             FilterSelectors,
@@ -29,19 +37,18 @@ public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>
             EditItem,
             NewItem,
             RemoveItem
-            
         );
     }
-    
-     private async void RemoveItem(Doctor? i) {
+
+    private async void RemoveItem(Doctor? i) {
         if (i is null) {
             return;
         }
 
         var result = await MessageBoxUtils.ShowYesNoDialog(
-            "Подтверждение",
-            $"Вы действительно хотите удалить клиента {i.Name}"
-        );
+                         "Подтверждение",
+                         $"Вы действительно хотите удалить доктора {i.Name}"
+                     );
         if (result is not ContentDialogResult.Primary) return;
         await using var db = new ApplicationDbContext();
         db.Doctors.Remove(i);
@@ -51,97 +58,109 @@ public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>
 
     private async Task NewItem() {
         await using var db = new ApplicationDbContext();
+        var itemToEdit = new Doctor();
+        var stack = new StackPanel {
+            Spacing = 15,
+            Children = {
+                new TextBox() {
+                    Watermark = "Имя",
+                    [!TextBox.TextProperty] = new Binding("Name")
+                },
+                new NumericUpDown() {
+                    Watermark = "Телефон",
+                    ShowButtonSpinner = false,
+                    Minimum = 0,
+                    FormatString = "+0 (###) ###-####",
+                    [!NumericUpDown.ValueProperty] = new Binding("Phone"),
+                },
+                new TextBox() {
+                    Watermark = "Почта",
+                    [!TextBox.TextProperty] = new Binding("Email")
+                },
+                new ComboBox() {
+                    PlaceholderText = "Специальность",
+                    ItemsSource = db.Specialities.ToList(),
+                    [!ComboBox.SelectedItemProperty] = new Binding("Speciality"),
+                    DisplayMemberBinding = new Binding("Name"),
+                    SelectedValueBinding = new Binding("Id"),
+                }
+            }
+        };
+
         var dialog = new ContentDialog() {
             Title = "Добавление доктора",
             PrimaryButtonText = "Создать",
             CloseButtonText = "Закрыть",
-            DataContext = new Doctor(),
-            Content = new StackPanel {
-                Spacing = 15,
-                Children = {
-                    new TextBox() {
-                        Watermark = "Имя",
-                        [!TextBox.TextProperty] = new Binding("Name")
-                    },
-                    new TextBox() {
-                        Watermark = "Телефон",
-                        [!TextBox.TextProperty] = new Binding("Phone")
-                    },
-                    new TextBox() {
-                        Watermark = "Почта",
-                        [!TextBox.TextProperty] = new Binding("Email")
-                    },
-                    new ComboBox() {
-                        PlaceholderText = "Специальность",
-                        ItemsSource = db.Specialities.ToList(),
-                        [!ComboBox.SelectedItemProperty] = new Binding("Speciality"),
-                        DisplayMemberBinding = new Binding("Name"),
-                        SelectedValueBinding = new Binding("Id")
-                    }
-                }
-            },
-            DefaultButton = ContentDialogButton.Primary
+            DataContext = itemToEdit,
+            Content = stack,
+            DefaultButton = ContentDialogButton.Primary,
+            [!ContentDialog.PrimaryButtonCommandParameterProperty] = new Binding(".")
         };
-        var result = await dialog.ShowAsync();
-        if (result is not ContentDialogResult.Primary) {
-            return;
-        }
 
-        var item = dialog.DataContext as Doctor;
-        if (item is null) return;
-        db.Doctors.Add(item);
-        await db.SaveChangesAsync();
-        ViewModel!.AddLocal(item);
+        dialog.AddControlValidation<Doctor>(stack.Children, async item => {
+            if (item is null) return;
+            await using var db = new ApplicationDbContext();
+            db.Attach(item);
+            db.Doctors.Add(item);
+            await db.SaveChangesAsync();
+            ViewModel!.AddLocal(item);
+        });
+        await dialog.ShowAsync();
     }
 
     private async void EditItem(Doctor? i) {
         if (i is null) return;
         await using var db = new ApplicationDbContext();
         var specialities = db.Specialities.ToList();
+        var stack = new StackPanel {
+            Spacing = 15,
+            Children = {
+                new TextBox() {
+                    Watermark = "Имя",
+                    [!TextBox.TextProperty] = new Binding("Name")
+                },
+                new NumericUpDown() {
+                    Watermark = "Телефон",
+                    ShowButtonSpinner = false,
+                    Minimum = 0,
+                    FormatString = "+0 (###) ###-####",
+                    [!NumericUpDown.ValueProperty] = new Binding("Phone"),
+                },
+                new TextBox() {
+                    Watermark = "Почта",
+                    [!TextBox.TextProperty] = new Binding("Email")
+                },
+                new ComboBox() {
+                    PlaceholderText = "Специальность",
+                    ItemsSource = specialities,
+                    [!ComboBox.SelectedItemProperty] = new Binding("Speciality"),
+                    [!ComboBox.SelectedValueProperty] = new Binding("Speciality.Id"),
+                    DisplayMemberBinding = new Binding("Name"),
+                    SelectedValueBinding = new Binding("Id")
+                }
+            }
+        };
         var dialog = new ContentDialog() {
             Title = "Изменение доктора",
             PrimaryButtonText = "Изменить",
             CloseButtonText = "Закрыть",
             DataContext = i,
-            Content = new StackPanel {
-                Spacing = 15,
-                Children = {
-                    new TextBox() {
-                        Watermark = "Имя",
-                        [!TextBox.TextProperty] = new Binding("Name")
-                    },
-                    new TextBox() {
-                        Watermark = "Телефон",
-                        [!TextBox.TextProperty] = new Binding("Phone")
-                    },
-                    new TextBox() {
-                        Watermark = "Почта",
-                        [!TextBox.TextProperty] = new Binding("Email")
-                    },
-                    new ComboBox() {
-                        PlaceholderText = "Специальность",
-                        ItemsSource = specialities,
-                        [!ComboBox.SelectedItemProperty] = new Binding("Speciality"),
-                        [!ComboBox.SelectedValueProperty] = new Binding("Speciality.Id"),
-                        DisplayMemberBinding = new Binding("Name"),
-                        SelectedValueBinding = new Binding("Id")
-                    }
-                }
-            },
-            DefaultButton = ContentDialogButton.Primary
+            Content = stack,
+            DefaultButton = ContentDialogButton.Primary,
+            [!ContentDialog.PrimaryButtonCommandParameterProperty] = new Binding(".")
         };
-        var result = await dialog.ShowAsync();
-        if (result is not ContentDialogResult.Primary) {
-            return;
-        }
 
-        var item = dialog.DataContext as Doctor;
-        if (item is null) return;
-        db.Doctors.Update(item);
-        await db.SaveChangesAsync();
-        ViewModel!.ReplaceItem(i, item);
+        dialog.AddControlValidation<Doctor>(stack.Children, async item => {
+            if (item is null) return;
+            db.Attach(item);
+            db.Doctors.Update(item);
+            await db.SaveChangesAsync();
+            ViewModel!.ReplaceItem(i, item);
+        });
+
+        await dialog.ShowAsync();
     }
-    
+
     private static readonly Dictionary<int, Func<Doctor, object>> OrderSelectors = new() {
         { 1, it => it.DoctorId },
         { 2, it => it.Name },
@@ -155,7 +174,7 @@ public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>
         { 2, query => it => it.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
         { 3, query => it => it.Speciality.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
         { 4, query => it => it.Email.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
-        { 5, query => it => it.Phone.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
+        { 5, query => it => it.Phone.ToString().Contains(query, StringComparison.InvariantCultureIgnoreCase) },
     };
 
     private static object DefaultOrderSelector(Doctor it) => it.DoctorId;
@@ -165,6 +184,5 @@ public partial class DoctorView : ReactiveUserControl<TableViewModelBase<Doctor>
                  || it.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                  || it.Speciality.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                  || it.Email.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                 || it.Phone.Contains(query, StringComparison.InvariantCultureIgnoreCase);
-
+                 || it.Phone.ToString().Contains(query, StringComparison.InvariantCultureIgnoreCase);
 }

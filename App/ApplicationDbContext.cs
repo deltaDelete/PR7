@@ -9,7 +9,8 @@ namespace App;
 /// <inheritdoc cref="DbContext"/>
 public class ApplicationDbContext : DbContext {
     private static readonly string ConnectionString =
-        "server=10.10.1.24;user=user_01;password=user01pro;database=pro1_2";
+        "server=localhost;user=dev;password=devPassword;database=pr7";
+        // "server=10.10.1.24;user=user_01;password=user01pro;database=pro1_2";
 
     public DbSet<Appointment> Appointments { get; set; } = null!;
     public DbSet<Diagnosis> Diagnoses { get; set; } = null!;

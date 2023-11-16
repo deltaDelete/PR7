@@ -56,7 +56,7 @@
                     <DataGridTextColumn Header="Имя" Binding="{Binding FullName}" />
                     <DataGridTextColumn Header="Адрес" Binding="{Binding Address}" />
                     <DataGridTextColumn Header="Почта" Binding="{Binding Email}" />
-                    <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" />
+                    <DataGridTextColumn Header="Телефон" Binding="{Binding Phone, StringFormat={}{0:+0 (###) ###-####}}" />
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

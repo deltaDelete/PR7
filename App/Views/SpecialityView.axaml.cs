@@ -14,11 +14,11 @@ using FluentAvalonia.UI.Controls;
 
 namespace App.Views;
 
-public partial class DrugView : ReactiveUserControl<TableViewModelBase<Drug>> {
-    public DrugView() {
+public partial class SpecialityView : ReactiveUserControl<TableViewModelBase<Speciality>> {
+    public SpecialityView() {
         InitializeComponent();
         ViewModel = new(
-            () => new ApplicationDbContext().Drugs.ToList(),
+            () => new ApplicationDbContext().Specialities.ToList(),
             OrderSelectors,
             DefaultOrderSelector,
             FilterSelectors,
@@ -29,18 +29,18 @@ public partial class DrugView : ReactiveUserControl<TableViewModelBase<Drug>> {
         );
     }
 
-    private async void RemoveItem(Drug? i) {
+    private async void RemoveItem(Speciality? i) {
         if (i is null) {
             return;
         }
 
         var result = await MessageBoxUtils.ShowYesNoDialog(
             "Подтверждение",
-            $"Вы действительно хотите удалить клиента {i.Name}"
+            $"Вы действительно хотите удалить препарат {i.Name}"
         );
         if (result is not ContentDialogResult.Primary) return;
         await using var db = new ApplicationDbContext();
-        db.Drugs.Remove(i);
+        db.Specialities.Remove(i);
         await db.SaveChangesAsync();
         ViewModel?.RemoveLocal(i);
     }
@@ -59,24 +59,25 @@ public partial class DrugView : ReactiveUserControl<TableViewModelBase<Drug>> {
             Title = "Добавление препарата",
             PrimaryButtonText = "Создать",
             CloseButtonText = "Закрыть",
-            DataContext = new Drug(),
+            DataContext = new Speciality(),
             Content = stack,
             DefaultButton = ContentDialogButton.Primary,
             [!ContentDialog.PrimaryButtonCommandParameterProperty] = new Binding(".")
         };
 
-        dialog.AddControlValidation<Drug>(stack.Children, async item => {
+        dialog.AddControlValidation<Speciality>(stack.Children, async item => {
             if (item is null) return;
             await using var db = new ApplicationDbContext();
             db.Attach(item);
-            db.Drugs.Add(item);
+            db.Specialities.Add(item);
             await db.SaveChangesAsync();
             ViewModel!.AddLocal(item);
         });
+
         await dialog.ShowAsync();
     }
 
-    private async void EditItem(Drug? i) {
+    private async void EditItem(Speciality? i) {
         if (i is null) return;
         var stack = new StackPanel {
             Spacing = 15,
@@ -88,7 +89,7 @@ public partial class DrugView : ReactiveUserControl<TableViewModelBase<Drug>> {
             }
         };
         var dialog = new ContentDialog() {
-            Title = "Изменение препарата",
+            Title = "Изменение типа препарата",
             PrimaryButtonText = "Изменить",
             CloseButtonText = "Закрыть",
             DataContext = i,
@@ -97,30 +98,31 @@ public partial class DrugView : ReactiveUserControl<TableViewModelBase<Drug>> {
             [!ContentDialog.PrimaryButtonCommandParameterProperty] = new Binding(".")
         };
 
-        dialog.AddControlValidation<Drug>(stack.Children, async item => {
+        dialog.AddControlValidation<Speciality>(stack.Children, async item => {
             if (item is null) return;
             await using var db = new ApplicationDbContext();
             db.Attach(item);
-            db.Drugs.Update(item);
+            db.Specialities.Update(item);
             await db.SaveChangesAsync();
             ViewModel!.ReplaceItem(i, item);
         });
+        
         await dialog.ShowAsync();
     }
 
-    private static readonly Dictionary<int, Func<Drug, object>> OrderSelectors = new() {
+    private static readonly Dictionary<int, Func<Speciality, object>> OrderSelectors = new() {
         { 1, it => it.Id },
         { 2, it => it.Name },
     };
 
-    private static readonly Dictionary<int, Func<string, Func<Drug, bool>>> FilterSelectors = new() {
+    private static readonly Dictionary<int, Func<string, Func<Speciality, bool>>> FilterSelectors = new() {
         { 1, query => it => it.Id.ToString().Contains(query) },
         { 2, query => it => it.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
     };
 
-    private static object DefaultOrderSelector(Drug it) => it.Id;
+    private static object DefaultOrderSelector(Speciality it) => it.Id;
 
-    private static Func<Drug, bool> DefaultFilterSelector(string query)
+    private static Func<Speciality, bool> DefaultFilterSelector(string query)
         => it => it.Id.ToString().Contains(query, StringComparison.InvariantCultureIgnoreCase)
                  || it.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase);
 }

@@ -22,13 +22,14 @@
                                  PaneDisplayMode="Top"
                                  SelectionChanged="NavView_OnSelectionChanged">
             <controls:NavigationView.MenuItems>
-                <MenuItem Header="Пациенты" Tag="{x:Type views:PatientView}" IsSelected="True" />
-                <MenuItem Header="Врачи" Tag="{x:Type views:DoctorView}" />
-                <MenuItem Header="Препараты" Tag="{x:Type views:DrugView}" />
+                <controls:NavigationViewItem Content="Пациенты" Tag="{x:Type views:PatientView}" IsSelected="True" />
+                <controls:NavigationViewItem Content="Врачи" Tag="{x:Type views:DoctorView}" />
+                <controls:NavigationViewItem Content="Специальности" Tag="{x:Type views:SpecialityView}" />
+                <controls:NavigationViewItem Content="Препараты" Tag="{x:Type views:DrugView}" />
+                <controls:NavigationViewItem Content="Типы диагнозов" Tag="{x:Type views:DiagnosisTypeView}" />
             </controls:NavigationView.MenuItems>
             <Grid>
                 <controls:Frame Name="NavFrame" />
-                <SplitButton />
             </Grid>
         </controls:NavigationView>
     </DockPanel>

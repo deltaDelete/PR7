@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using App.Models;
+using App.Utils;
 using App.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
+using FluentAvalonia.UI.Controls;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace App.Views;
@@ -29,46 +32,117 @@ public partial class PatientView : ReactiveUserControl<TableViewModelBase<Patien
     }
     
     private async void RemoveItem(Patient? i) {
-        // if (i is null) {
-        //     return;
-        // }
-        //
-        // var mbox = MessageBoxUtils.CreateConfirmMessageBox(
-        //     "Подтверждение",
-        //     $"Вы действительно хотите удалить клиента {i.LastName} {i.FirstName}"
-        // );
-        // var result = await mbox.ShowAsPopupAsync(this);
-        // if (result is not "Да") return;
-        //
-        // DatabaseContext.InstanceFor(this).Clients.Remove(i);
-        // await DatabaseContext.InstanceFor(this).SaveChangesAsync();
-        // ViewModel?.RemoveLocal(i);
-        throw new NotImplementedException();
+        if (i is null) {
+            return;
+        }
+
+        var result = await MessageBoxUtils.ShowYesNoDialog(
+                         "Подтверждение",
+                         $"Вы действительно хотите удалить пациента {i.FullName}"
+                     );
+        if (result is not ContentDialogResult.Primary) return;
+        await using var db = new ApplicationDbContext();
+        db.Patients.Remove(i);
+        await db.SaveChangesAsync();
+        ViewModel?.RemoveLocal(i);
     }
 
     private async Task NewItem() {
-        // var window = new EditClientView(group => {
-        //     if (group is null) return;
-        //     using var db = DatabaseContext.NewInstance();
-        //     db.Clients.Add(group);
-        //     db.SaveChanges();
-        //     ViewModel!.AddLocal(group);
-        // });
-        // await window.ShowDialog(Application.Current!.MainWindow());
-        throw new NotImplementedException();
+        await using var db = new ApplicationDbContext();
+        var itemToEdit = new Patient();
+        var stack = new StackPanel {
+            Spacing = 15,
+            Children = {
+                new TextBox() {
+                    Watermark = "Имя",
+                    [!TextBox.TextProperty] = new Binding("FullName")
+                },
+                new NumericUpDown() {
+                    Watermark = "Телефон",
+                    ShowButtonSpinner = false,
+                    Minimum = 0,
+                    FormatString = "+0 (###) ###-####",
+                    [!NumericUpDown.ValueProperty] = new Binding("Phone"),
+                },
+                new TextBox() {
+                    Watermark = "Почта",
+                    [!TextBox.TextProperty] = new Binding("Email")
+                },
+                new TextBox() {
+                    Watermark = "Адрес",
+                    [!TextBox.TextProperty] = new Binding("Address")
+                },
+            }
+        };
+
+        var dialog = new ContentDialog() {
+            Title = "Добавление пациента",
+            PrimaryButtonText = "Создать",
+            CloseButtonText = "Закрыть",
+            DataContext = itemToEdit,
+            Content = stack,
+            DefaultButton = ContentDialogButton.Primary,
+            [!ContentDialog.PrimaryButtonCommandParameterProperty] = new Binding(".")
+        };
+
+        dialog.AddControlValidation<Patient>(stack.Children, async item => {
+            if (item is null) return;
+            await using var db = new ApplicationDbContext();
+            db.Attach(item);
+            db.Patients.Add(item);
+            await db.SaveChangesAsync();
+            ViewModel!.AddLocal(item);
+        });
+        await dialog.ShowAsync();
     }
 
     private async void EditItem(Patient? i) {
-        // if (i is null) return;
-        // var window = new EditClientView(group => {
-        //     if (group is null) return;
-        //     using var db = DatabaseContext.NewInstance();
-        //     db.Clients.Update(i);
-        //     db.SaveChanges();
-        //     ViewModel!.ReplaceItem(i, group);
-        // }, i);
-        // await window.ShowDialog(Application.Current!.MainWindow());
-        throw new NotImplementedException();
+        if (i is null) return;
+        await using var db = new ApplicationDbContext();
+        var stack = new StackPanel {
+            Spacing = 15,
+            Children = {
+                new TextBox() {
+                    Watermark = "Имя",
+                    [!TextBox.TextProperty] = new Binding("FullName")
+                },
+                new NumericUpDown() {
+                    Watermark = "Телефон",
+                    ShowButtonSpinner = false,
+                    Minimum = 0,
+                    FormatString = "+0 (###) ###-####",
+                    [!NumericUpDown.ValueProperty] = new Binding("Phone"),
+                },
+                new TextBox() {
+                    Watermark = "Почта",
+                    [!TextBox.TextProperty] = new Binding("Email")
+                },
+                new TextBox() {
+                    Watermark = "Адрес",
+                    [!TextBox.TextProperty] = new Binding("Address")
+                },
+            }
+        };
+
+        var dialog = new ContentDialog() {
+            Title = "Изменение пациента",
+            PrimaryButtonText = "Изменить",
+            CloseButtonText = "Закрыть",
+            DataContext = i,
+            Content = stack,
+            DefaultButton = ContentDialogButton.Primary,
+            [!ContentDialog.PrimaryButtonCommandParameterProperty] = new Binding(".")
+        };
+
+        dialog.AddControlValidation<Patient>(stack.Children, async item => {
+            if (item is null) return;
+            await using var db = new ApplicationDbContext();
+            db.Attach(item);
+            db.Patients.Update(item);
+            await db.SaveChangesAsync();
+            ViewModel!.AddLocal(item);
+        });
+        await dialog.ShowAsync();
     }
     
     private static readonly Dictionary<int, Func<Patient, object>> OrderSelectors = new() {
@@ -84,7 +158,7 @@ public partial class PatientView : ReactiveUserControl<TableViewModelBase<Patien
         { 2, query => it => it.FullName.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
         { 3, query => it => it.Address.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
         { 4, query => it => it.Email.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
-        { 5, query => it => it.Phone.Contains(query, StringComparison.InvariantCultureIgnoreCase) },
+        { 5, query => it => it.Phone.ToString().Contains(query, StringComparison.InvariantCultureIgnoreCase) },
     };
 
     private static object DefaultOrderSelector(Patient it) => it.Id;
@@ -94,6 +168,6 @@ public partial class PatientView : ReactiveUserControl<TableViewModelBase<Patien
                  || it.FullName.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                  || it.Address.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                  || it.Email.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                 || it.Phone.Contains(query, StringComparison.InvariantCultureIgnoreCase);
+                 || it.Phone.ToString().Contains(query, StringComparison.InvariantCultureIgnoreCase);
 
 }

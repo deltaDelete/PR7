@@ -89,13 +89,13 @@ public class TableViewModelBase<T> : TableViewModelBase, IActivatableViewModel {
         // TODO: решить траблы переделать способ пагинации
         _pages = this.WhenAnyValue(x => x.Filtered)
             .Select(x => {
-                return x.Select((item, index) => new { Index = index, Item = item })
-                    .GroupBy(item => item.Index / Take)
-                    .Select(grouping => grouping.Select(v => v.Item).ToList())
-                    .ToList();
+                return x.Select((item, index) => (index, item))
+                                                 .GroupBy(item => item.index / Take)
+                                                 .Select(grouping => grouping.Select(v => v.item).ToList())
+                                                 .ToList();
             }).ToProperty(this, x => x.Pages);
         _totalPages = this.WhenAnyValue(x => x.Pages)
-            .Select(x => x.Count).ToProperty(this, x => x.TotalPages);
+            .Select(x => x.Count).ToProperty(this, x => x.TotalPages, () => 1);
 
         var canTakeNext = this.WhenAnyValue(
             x => x.CurrentPage,
@@ -137,7 +137,7 @@ public class TableViewModelBase<T> : TableViewModelBase, IActivatableViewModel {
             .DistinctUntilChanged()
             .Subscribe(OnSearchChanged);
         this.WhenAnyValue(
-            x => x.Filtered
+            x => x.Pages
         ).Subscribe(_ => TakeFirst());
     }
 
@@ -215,24 +215,19 @@ public class TableViewModelBase<T> : TableViewModelBase, IActivatableViewModel {
     }
 
     protected void TakePrev() {
-        Skip -= Take;
-        Items = new(
-            Filtered.Skip(Skip).Take(Take).ToList()
-        );
+        if (CurrentPage - 1 > TotalPages) return;
+        Items = new(Pages[CurrentPage + 1]);
+        CurrentPage--;
     }
 
     protected void TakeFirst() {
-        Skip = 0;
-        Items = new(
-            Filtered.Take(Take).ToList()
-        );
+        Items = new(Pages.FirstOrDefault(new List<T>()));
+        CurrentPage = 1;
     }
 
     protected void TakeLast() {
-        Skip = Filtered.Count - Take;
-        Items = new(
-            Filtered.TakeLast(Take).ToList()
-        );
+        Items = new(Pages.LastOrDefault(new List<T>()));
+        CurrentPage = TotalPages;
     }
 
     public ViewModelActivator Activator { get; } = new ViewModelActivator();

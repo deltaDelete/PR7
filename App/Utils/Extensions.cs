@@ -1,5 +1,16 @@
 using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.VisualTree;
+using DynamicData.Binding;
+using FluentAvalonia.UI.Controls;
+using ReactiveUI;
 
 namespace App.Utils;
 
@@ -20,5 +31,48 @@ public static class Extensions {
         }
         
         return Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+    }
+
+    public static void Assign<T, TProperty>(this T? item, Expression<Func<T, TProperty>> selector, TProperty value) {
+        if (item is null) {
+            return;
+        }
+
+        if (selector.Body is not MemberExpression { Member: PropertyInfo propertyInfo })
+        {
+            throw new ArgumentException("The expression is not a member access expression or does not have access to a property.", nameof(selector));
+        }
+        
+        propertyInfo.SetValue(item, value);
+    }
+    
+    /// <summary>
+    /// Выключает PrimaryButton диалогового окна, если один из контролов содержит класс :error
+    /// </summary>
+    /// <param name="dialog">Диалоговое окно, в котором будет реализована проверка</param>
+    /// <param name="controls">Список с проверяемыми контролами</param>
+    /// <param name="action">Действие по завершению</param>
+    /// <typeparam name="T">Тип принимаемый действием</typeparam>
+    /// <returns>Комманду, выполняемую ContentDialog</returns>
+    public static void AddControlValidation<T>(this ContentDialog dialog, Controls controls, Func<T, Task> action) {
+        var hasAnyErrors = controls.Select(
+            control =>
+                control.Classes.ObserveCollectionChanges()
+                       .Select(
+                           x =>
+                               !(x.Sender as Classes)!
+                                   .Contains(":error")
+                       )
+        );
+        var isValid = hasAnyErrors.Aggregate((o, o1) =>
+                                                 o.CombineLatest(o1, (b, b1) => b && b1)
+        );
+        isValid.Subscribe(x => {
+            var btn = dialog.GetVisualDescendants().FirstOrDefault(x => x.Name == "PrimaryButton") as Button;
+            btn.Assign(x => x.IsEnabled, x);
+        });
+
+        var primaryCommand = ReactiveUI.ReactiveCommand.CreateFromTask(action, isValid);
+        dialog.PrimaryButtonCommand = primaryCommand;
     }
 }

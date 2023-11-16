@@ -18,15 +18,10 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
         InitializeComponent();
         ViewModel = new MainWindowViewModel();
-        if (OSVersionHelper.IsWindowsAtLeast(10, 0, 19042)) {
-            TransparencyLevelHint = new[] {WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Mica, WindowTransparencyLevel.None};
-            Background = Brushes.Transparent;
-            ExtendClientAreaToDecorationsHint = true;
-        }
     }
 
     private void NavView_OnSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e) {
-        if (e.SelectedItem is MenuItem item && item.Tag is Type type) {
+        if (e.SelectedItem is NavigationViewItem { Tag: Type type }) {
             NavFrame.Navigate(type, null, new SlideNavigationTransitionInfo());
         }
     }

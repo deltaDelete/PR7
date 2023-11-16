@@ -1,15 +1,15 @@
-<rxui:ReactiveUserControl x:TypeArguments="vm:TableViewModelBase" xmlns="https://github.com/avaloniaui"
+<reactiveUi:ReactiveUserControl x:TypeArguments="vm:TableViewModelBase" xmlns="https://github.com/avaloniaui"
                                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                                xmlns:rxui="http://reactiveui.net"
+                                xmlns:reactiveUi="http://reactiveui.net"
                                 xmlns:vm="clr-namespace:App.ViewModels"
-                                xmlns:m="clr-namespace:App.Models"
+                                xmlns:models="clr-namespace:App.Models"
+                                x:DataType="vm:TableViewModelBase"
                                 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                                x:Class="App.Views.DoctorView"
-                                x:DataType="vm:TableViewModelBase">
+                                x:Class="App.Views.SpecialityView">
     <Design.DataContext>
-        <vm:TableViewModelBase x:TypeArguments="m:Doctor" />
+        <vm:TableViewModelBase x:TypeArguments="models:Speciality" />
     </Design.DataContext>
     <DockPanel LastChildFill="True">
         <ScrollViewer HorizontalScrollBarVisibility="Auto" DockPanel.Dock="Top">
@@ -52,13 +52,10 @@
                       x:CompileBindings="False">
                 <DataGrid.Columns>
                     <DataGridTextColumn IsVisible="False" Header="Все столбцы" />
-                    <DataGridTextColumn Header="Код" Binding="{Binding DoctorId}" />
-                    <DataGridTextColumn Header="Имя" Binding="{Binding Name}" />
-                    <DataGridTextColumn Header="Специальность" Binding="{Binding Speciality.Name}" />
-                    <DataGridTextColumn Header="Почта" Binding="{Binding Email}" />
-                    <DataGridTextColumn Header="Телефон" Binding="{Binding Phone, StringFormat={}{0:+0 (###) ###-####}}" />
+                    <DataGridTextColumn Header="Код" Binding="{Binding Id}" />
+                    <DataGridTextColumn Header="Название" Binding="{Binding Name}" />
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
     </DockPanel>
-</rxui:ReactiveUserControl>
+</reactiveUi:ReactiveUserControl>
